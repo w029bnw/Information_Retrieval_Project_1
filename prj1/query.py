@@ -3,8 +3,7 @@
 query processing
 
 '''
-
-from nltk.tokenize import word_tokenize
+import util
 
 class QueryProcessor:
 
@@ -19,21 +18,9 @@ class QueryProcessor:
             also use the provided spelling corrector. Note that
             spelling corrector should be applied before stopword
             removal and stemming (why?)'''
-
-        import util
         
         # Tokenize the documents, then filter stop-words and stem tokens
-        tokens = (word_tokenize(self.docs)).lower()
-        processed_tokens = []
-        
-        for token in tokens:
-            if util.isStopWord(token) is True:
-                continue
-            else:
-                stemmed_token = util.stemming(token)
-                processed_tokens.append(stemmed_token)
-        
-        return processed_tokens
+        processed_tokens = util.tokenize(self.docs)
 
 
     def booleanQuery(self):
@@ -59,8 +46,7 @@ def query():
     # processing_algorithm: 0 for booleanQuery and 1 for vectorQuery
     # for booleanQuery, the program will print the total number of documents and the list of docuement IDs
     # for vectorQuery, the program will output the top 3 most similar documents
-
-
+    
 if __name__ == '__main__':
     #test()
     query()

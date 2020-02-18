@@ -12,7 +12,9 @@ Index structure:
 
 '''
 import util
-import doc
+import doc as d
+import sys
+import cran
 
 
 class Posting:
@@ -43,7 +45,7 @@ class IndexItem:
 
     def add(self, docid, pos):
         ''' add a posting'''
-        if not self.posting.has_key(docid):
+        if docid not in self.posting:
             self.posting[docid] = Posting(docid)
         self.posting[docid].append(pos)
 
@@ -55,19 +57,30 @@ class IndexItem:
 class InvertedIndex:
 
     def __init__(self):
-        self.items = {} # list of IndexItems
+        self.items = [] # list of IndexItems
         self.nDocs = 0  # the number of indexed documents
 
 
     def indexDoc(self, doc): # indexing a Document object
-        ''' indexing a docuemnt, using the simple SPIMI algorithm, but no need to store blocks due to the small collection we are handling. Using save/load the whole index instead'''
-
-        # ToDo: indexing only title and body; use some functions defined in util.py
-        # (1) convert to lower cases,
-        # (2) remove stopwords,
-        # (3) stemming
-
-
+        ''' indexing a document, using the simple SPIMI algorithm, but no need 
+        to store blocks due to the small collection we are handling. 
+        Using save/load the whole index instead'''
+        
+        tokens = util.tokenize(doc)
+        
+        for token in tokens:
+            if token not in self.items:
+                item = IndexItem(token)
+                item.add(int(doc.docID), -1)
+                self.items.append(item)
+                
+            else:
+                for index in self.items:
+                    if index == token:
+                        index.add(doc.docID, -1)
+                        
+        self.nDocs += 1
+        
     def sort(self):
         ''' sort all posting lists by docID'''
         #ToDo
@@ -77,11 +90,15 @@ class InvertedIndex:
 
     def save(self, filename):
         ''' save to disk'''
-        # ToDo: using your preferred method to serialize/deserialize the index
+        f = open(filename,'w')
+        f.write(self.indexDoc)
+        f.close()
 
     def load(self, filename):
         ''' load from disk'''
-        # ToDo
+        f = open(filename, 'r')
+        docs = f.readlines()
+        f.close()
 
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
@@ -92,14 +109,22 @@ class InvertedIndex:
 
 def test():
     ''' test your code thoroughly. put the testing cases here'''
-    print 'Pass'
+    print ('Pass')
 
 def indexingCranfield():
     #ToDo: indexing the Cranfield dataset and save the index to a file
     # command line usage: "python index.py cran.all index_file"
     # the index is saved to index_file
+    
+    # Load cran.all and create a cran_file object to store the document info
+    filename = 'cran.all'
+    cran_file = cran.CranFile(filename)
+        
+    inverted_index = InvertedIndex()
+    for doc in cran_file.docs:
+        inverted_index.indexDoc(doc)
 
-    print 'Done'
+    print('Done')
 
 if __name__ == '__main__':
     #test()

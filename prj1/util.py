@@ -4,6 +4,7 @@
 
     shared by both indexing and query processing
 '''
+import string
 
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
@@ -19,7 +20,7 @@ def isStopWord(word):
 #    stop_words = f.read()
 #    f.close()
     
-    if word not in stop_words:
+    if word not in stop_words and word not in string.punctuation:
         return False
     else:
         return True

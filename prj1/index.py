@@ -34,7 +34,7 @@ class Posting:
 
     def term_freq(self):
         ''' return the term frequency in the document'''
-        #ToDo
+        
 
 
 class IndexItem:
@@ -45,7 +45,7 @@ class IndexItem:
 
     def add(self, docid, pos):
         ''' add a posting'''
-        if docid not in self.posting:
+        if int(docid) not in self.posting.keys():
             self.posting[docid] = Posting(docid)
         self.posting[docid].append(pos)
 
@@ -68,16 +68,24 @@ class InvertedIndex:
         
         tokens = util.tokenize(doc)
         
+        token_counter = 0
         for token in tokens:
-            if token not in self.items:
+            found = False
+            for item in self.items:
+                if token == item.term:
+                    found = True
+                    break
+                    
+            if found == False:
                 item = IndexItem(token)
-                item.add(int(doc.docID), -1)
+                item.add(int(doc.docID), token_counter)
                 self.items.append(item)
                 
             else:
                 for index in self.items:
-                    if index == token:
-                        index.add(doc.docID, -1)
+                    if index.term == token:
+                        index.add(int(doc.docID), token_counter)
+            token_counter += 1
                         
         self.nDocs += 1
         
@@ -103,8 +111,6 @@ class InvertedIndex:
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
         #ToDo: return the IDF of the term
-
-    # more methods if needed
 
 
 def test():

@@ -1,5 +1,3 @@
-
-
 '''
 
 Index structure:
@@ -15,7 +13,7 @@ import util
 import doc as d
 import sys
 import cran
-
+import unittest
 
 class Posting:
     def __init__(self, docID):
@@ -34,7 +32,7 @@ class Posting:
 
     def term_freq(self):
         ''' return the term frequency in the document'''
-        
+        return len(self.positions)
 
 
 class IndexItem:
@@ -51,7 +49,8 @@ class IndexItem:
 
     def sort(self):
         ''' sort by document ID for more efficient merging. For each document also sort the positions'''
-        # ToDo
+        for item in sorted(self.posting.keys()):
+            self.sorted_postings.append(item)
 
 
 class InvertedIndex:
@@ -66,8 +65,10 @@ class InvertedIndex:
         to store blocks due to the small collection we are handling. 
         Using save/load the whole index instead'''
         
+        # Tokenize document, remove stop words, normalize, and stem
         tokens = util.tokenize(doc)
         
+        # Add tokens to dictionary 
         token_counter = 0
         for token in tokens:
             found = False
@@ -76,11 +77,15 @@ class InvertedIndex:
                     found = True
                     break
                     
+            # If token not stored in dictionary already, then add it and create
+            # a posting
             if found == False:
                 item = IndexItem(token)
                 item.add(int(doc.docID), token_counter)
                 self.items.append(item)
                 
+            # If token is already in dictionary, update posting to include
+            # new document(s) and position(s)
             else:
                 for index in self.items:
                     if index.term == token:
@@ -91,7 +96,8 @@ class InvertedIndex:
         
     def sort(self):
         ''' sort all posting lists by docID'''
-        #ToDo
+        for item in self.items:
+            item.sort()
 
     def find(self, term):
         return self.items[term]
@@ -113,8 +119,53 @@ class InvertedIndex:
         #ToDo: return the IDF of the term
 
 
-def test():
+class test(unittest.TestCase):
     ''' test your code thoroughly. put the testing cases here'''
+
+# Test stemming used to make sure it's behaving as expected
+    def test_short_strings(self):
+        assert util.stemming("y's") == "y"
+        
+    def test_english_stemming(self):
+        assert util.stemming("having") == "have"
+        
+# Test that stopwords are being removed as expected
+    def test_stopword_removal(self):
+        tokens = ['to', 'sleep', 'perchance', 'to', 'dream']
+        processed_tokens = []
+        for term in tokens:
+            if(util.isStopWord(term) == False):
+                processed_tokens.append(term)
+                
+        assert 'to' not in processed_tokens
+        
+# Test that terms are added to the dictionary and their postings are updated as
+# expected
+    def test_new_dictionary_terms(self):
+        inverted_index = InvertedIndex()
+        doc = d.Document('1','temp','me',"This is a test. Test, test, test...")
+        
+        inverted_index.indexDoc(doc)
+        
+        assert len(inverted_index.items) != 0
+        
+    def test_posting_updates(self):
+        inverted_index = InvertedIndex()
+        doc = d.Document('1','temp','me',"This is a test. Test, test, test...")
+        inverted_index.indexDoc(doc)
+        
+        assert inverted_index.items[0].posting[1].term_freq() == 4
+
+# Test that sorting happens as expected
+    def test_sorting(self):
+        
+        
+# Test that serialization happens as expected and that the index can be saved
+# and loaded
+    def test_saves(self):
+        
+    def test_loads(self):
+        
     print ('Pass')
 
 def indexingCranfield():
@@ -129,9 +180,12 @@ def indexingCranfield():
     inverted_index = InvertedIndex()
     for doc in cran_file.docs:
         inverted_index.indexDoc(doc)
+         
+    # Sort the index by docID
+    inverted_index.items.sort()
 
     print('Done')
 
 if __name__ == '__main__':
-    #test()
-    indexingCranfield()
+    unittest.main()
+    #indexingCranfield()

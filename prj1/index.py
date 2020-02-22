@@ -26,7 +26,7 @@ class Posting:
     def sort(self):
         ''' sort positions'''
         self.positions.sort()
-
+ 
     def merge(self, positions):
         self.positions.extend(positions)
 
@@ -157,16 +157,28 @@ class test(unittest.TestCase):
         assert inverted_index.items[0].posting[1].term_freq() == 4
 
 # Test that sorting happens as expected
-    def test_sorting(self):
+    def test_index_sorting(self):
+        inverted_index = InvertedIndex()
+        doc1 = d.Document('1','temp','me','Hello, World!')
+        doc2 = d.Document('2','temp','me','This is my sixth test.')
+        doc3 = d.Document('3','temp','me','I hope you enjoy this test.')
+        doc_list = [doc1, doc2, doc3]
         
+        for doc in doc_list:
+            inverted_index.indexDoc(doc)
         
-# Test that serialization happens as expected and that the index can be saved
-# and loaded
-    def test_saves(self):
+        inverted_index.sort()
         
-    def test_loads(self):
+        assert inverted_index.items[0].posting[1].docID == 1
+        assert inverted_index.items[3].posting[2].docID == 2
+        assert inverted_index.items[3].posting[3].docID == 3
         
-    print ('Pass')
+## Test that serialization happens as expected and that the index can be saved
+## and loaded
+#    def test_saves(self):
+#        
+#    def test_loads(self):
+#        
 
 def indexingCranfield():
     #ToDo: indexing the Cranfield dataset and save the index to a file
@@ -182,7 +194,7 @@ def indexingCranfield():
         inverted_index.indexDoc(doc)
          
     # Sort the index by docID
-    inverted_index.items.sort()
+    inverted_index.sort()
 
     print('Done')
 

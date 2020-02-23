@@ -4,6 +4,10 @@ query processing
 
 '''
 import util
+import norvig_spell
+import cran
+import index
+import pickle
 
 class QueryProcessor:
 
@@ -19,8 +23,20 @@ class QueryProcessor:
             spelling corrector should be applied before stopword
             removal and stemming (why?)'''
         
-        # Tokenize the documents, then filter stop-words and stem tokens
-        processed_tokens = util.tokenize(self.docs)
+        # Spell check words in the query
+        spell_checked_words = []
+        words = util.tokenize(self.raw_query)
+        for word in words:
+            spell_checked_words.append(norvig_spell.correction(word))
+            
+        # Now remove stopwords and stem
+        processed_words = []
+        for word in spell_checked_words:
+            if util.isStopWord(word) is True:
+                continue
+            else:
+                stemmed_word = util.stemming(word)
+                processed_words.append(stemmed_word)
 
 
     def booleanQuery(self):
@@ -46,6 +62,20 @@ def query():
     # processing_algorithm: 0 for booleanQuery and 1 for vectorQuery
     # for booleanQuery, the program will print the total number of documents and the list of docuement IDs
     # for vectorQuery, the program will output the top 3 most similar documents
+    
+    filename = 'query.text'
+    queries = cran.CranFile(filename)
+    
+    filename = 'cran.all'
+    collection = cran.CranFile(filename)
+    
+# TODO: Load the saved inverted index object
+    filename = 'serialData'
+    inverted_index = index.InvertedIndex()
+    inverted_index.load(filename)
+    
+    for query in queries.docs:
+        query_processor = QueryProcessor(query, index, collection)
     
 if __name__ == '__main__':
     #test()

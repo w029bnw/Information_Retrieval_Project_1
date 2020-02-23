@@ -10,7 +10,9 @@ from collections import Counter
 
 def words(text): return re.findall(r'\w+', text.lower())
 
-WORDS = Counter(words(open('big.txt').read()))
+# Supplemented the text used for spellchecking with cran file to account for 
+# highly specific technical terms.
+WORDS = Counter(words(open('big.txt' and 'cran.all').read()))
 
 def P(word, N=sum(WORDS.values())):
     "Probability of `word`."

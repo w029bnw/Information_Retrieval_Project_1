@@ -32,11 +32,17 @@ def stemming(word):
     stemmer = SnowballStemmer('english')
     return stemmer.stem(word)
 
-def tokenize(docs):
+def tokenize(doc):
+    '''tokenizes the document'''
+    tokens = word_tokenize((doc.body).lower())
+    
+    return tokens
+
+def preprocess(doc):
     '''returns list of tokens that has been stemmed and stopwords have been 
     removed'''        
     # Tokenize the documents, then filter stop-words and stem tokens
-    tokens = word_tokenize((docs.body).lower())
+    tokens = tokenize(doc)
     processed_tokens = []
         
     # Strip the '' off of each token so we can compare with stopword list

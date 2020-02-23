@@ -66,7 +66,7 @@ class InvertedIndex:
         Using save/load the whole index instead'''
         
         # Tokenize document, remove stop words, normalize, and stem
-        tokens = util.tokenize(doc)
+        tokens = util.preprocess(doc)
         
         # Add tokens to dictionary 
         token_counter = 0
@@ -104,15 +104,13 @@ class InvertedIndex:
 
     def save(self, filename):
         ''' save to disk'''
-        f = open(filename,'w')
-        f.write(self.indexDoc)
-        f.close()
+        ## TODO
 
     def load(self, filename):
         ''' load from disk'''
-        f = open(filename, 'r')
-        docs = f.readlines()
-        f.close()
+        ## TODO
+#        self.items = items
+#        self.nDocs = nDocs
 
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
@@ -162,7 +160,7 @@ class test(unittest.TestCase):
         doc1 = d.Document('1','temp','me','Hello, World!')
         doc2 = d.Document('2','temp','me','This is my sixth test.')
         doc3 = d.Document('3','temp','me','I hope you enjoy this test.')
-        doc_list = [doc1, doc2, doc3]
+        doc_list = [doc1, doc3, doc2]
         
         for doc in doc_list:
             inverted_index.indexDoc(doc)
@@ -170,8 +168,8 @@ class test(unittest.TestCase):
         inverted_index.sort()
         
         assert inverted_index.items[0].posting[1].docID == 1
-        assert inverted_index.items[3].posting[2].docID == 2
-        assert inverted_index.items[3].posting[3].docID == 3
+        assert inverted_index.items[4].posting[2].docID == 2
+        assert inverted_index.items[4].posting[3].docID == 3
         
 ## Test that serialization happens as expected and that the index can be saved
 ## and loaded

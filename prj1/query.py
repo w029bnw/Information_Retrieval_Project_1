@@ -8,6 +8,7 @@ import norvig_spell
 import cran
 import index
 import pickle
+import unittest
 
 class QueryProcessor:
 
@@ -51,8 +52,18 @@ class QueryProcessor:
 
 
 
-def test():
+class test(unittest.TestCase):
     ''' test your code thoroughly. put the testing cases here'''
+    
+# Test that the spell check works for both technical and non technical words
+    def test_spellcheck(self):
+        word = 'retangulor'
+        assert norvig_spell.correction(word) == 'rectangular'
+        
+    def test_spellcheck_technical(self):
+        word = 'magntohydodynamic'
+        assert norvig_spell.correction(word) == 'magnetohydrodynamic'
+        
     print('Pass')
 
 def query():
@@ -78,5 +89,5 @@ def query():
         query_processor = QueryProcessor(query, index, collection)
     
 if __name__ == '__main__':
-    #test()
-    query()
+    unittest.main()
+    #query()

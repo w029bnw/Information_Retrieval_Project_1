@@ -14,6 +14,7 @@ import doc as d
 import sys
 import cran
 import unittest
+import math
 
 class Posting:
     def __init__(self, docID):
@@ -114,8 +115,9 @@ class InvertedIndex:
 
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
-        #ToDo: return the IDF of the term
-
+        indexItem = self.find(term)
+        idf = math.log(self.nDocs/len(indexItem.sorted_postings))
+        return idf
 
 class test(unittest.TestCase):
     ''' test your code thoroughly. put the testing cases here'''

@@ -19,10 +19,10 @@ Index structure:
 '''
 import util
 import doc as d
-import sys
 import cran
 import unittest
 import math
+import pickle
 
 class Posting:
     def __init__(self, docID):
@@ -39,9 +39,9 @@ class Posting:
     def merge(self, positions):
         self.positions.extend(positions)
 
-    def term_freq(self,positions):
+    def term_freq(self, doc_length):
         ''' return the term frequency in the document'''
-        return (len(self.positions)/len(positions))
+        return (len(self.positions)/doc_length)
 
 
 class IndexItem:
@@ -67,7 +67,7 @@ class InvertedIndex:
     def __init__(self):
         self.items = [] # list of IndexItems
         self.nDocs = 0  # the number of indexed documents
-
+        self.docLength = {} # The length of each document
 
     def indexDoc(self, doc): # indexing a Document object
         ''' indexing a document, using the simple SPIMI algorithm, but no need 
@@ -102,6 +102,7 @@ class InvertedIndex:
             token_counter += 1
                         
         self.nDocs += 1
+        self.docLength.update({self.nDocs : len(doc.body.split())})
         
     def sort(self):
         ''' sort all posting lists by docID'''
@@ -113,19 +114,18 @@ class InvertedIndex:
 
     def save(self, filename):
         ''' save to disk'''
-        serialData=open ('filename', 'ab')
-        #source destination
-        pickle.dump(data, serialData)
-        serialData.close()
+        serial_data=open(filename, 'wb')
+        pickle.dump([self.items, self.nDocs], serial_data)
+        serial_data.close()
 
     def load(self, filename):
         ''' load from disk'''
-        serialData= open('filename', 'rb')
-        data =pickle.load(serialData)
-        serialData.close()
-
-#        self.items = items
-#        self.nDocs = nDocs
+        serial_data= open(filename, 'rb')
+        data = pickle.load(serial_data)
+        serial_data.close()
+        
+        self.items = data[0]
+        self.nDocs = data[1]
 
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
@@ -145,7 +145,7 @@ class test(unittest.TestCase):
         
 # Test that stopwords are being removed as expected
     def test_stopword_removal(self):
-        tokens = ['to', 'sleep', 'perchance', 'to', 'dream']
+        tokens = ['to', 'sleep', 'perchance', 'to', 'dream','...']
         processed_tokens = []
         for term in tokens:
             if(util.isStopWord(term) == False):
@@ -168,7 +168,7 @@ class test(unittest.TestCase):
         doc = d.Document('1','temp','me',"This is a test. Test, test, test...")
         inverted_index.indexDoc(doc)
         
-        assert inverted_index.items[0].posting[1].term_freq() == (4/6)
+        assert inverted_index.items[0].posting[1].term_freq(inverted_index.docLength[1]) == (4/7)
 
 # Test that sorting happens as expected
     def test_index_sorting(self):
@@ -190,18 +190,15 @@ class test(unittest.TestCase):
 ## Test that serialization happens as expected and that the index can be saved
 ## and loaded
 
-   def test_saves(self):
-     inverted_index = InvertedIndex()
-     doc = d.Document('1','temp','me',"This is a test. Test, test, test...")
-     assert inverted_index.save(doc)) == 'filename' 
-    # assert save.
-    
-
-   def test_loads(self):
-     inverted_index = InvertedIndex()
-     assert inverted_index.load(serialData) == 'filename'
-     #assert 
-       
+    def test_save_and_load(self):
+        inverted_index = InvertedIndex()
+        doc = d.Document('1','temp','me',"This is a test. Test, test, test...")
+        inverted_index.indexDoc(doc)
+        inverted_index.save('output.p')
+        
+        inverted_index_new = InvertedIndex()
+        inverted_index_new.load('output.p')
+        assert inverted_index.items[0].term == inverted_index_new.items[0].term
 
 def indexingCranfield():
     #ToDo: indexing the Cranfield dataset and save the index to a file
@@ -218,9 +215,12 @@ def indexingCranfield():
          
     # Sort the index by docID
     inverted_index.sort()
+    
+    # Save the index
+    inverted_index.save('output.p')
 
     print('Done')
 
 if __name__ == '__main__':
     unittest.main()
-    #indexingCranfield()
+#    indexingCranfield()

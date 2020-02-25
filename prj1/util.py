@@ -19,8 +19,8 @@ def isStopWord(word):
 #    f = open('stopwords', 'r')
 #    stop_words = f.read()
 #    f.close()
-    
-    if word not in stop_words and word not in string.punctuation:
+    translation = word.maketrans('','',string.punctuation) # For edge cases where whole word is punctuation
+    if word not in stop_words and word not in string.punctuation and word.translate(translation) != '':
         return False
     else:
         return True

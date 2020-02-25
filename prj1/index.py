@@ -75,7 +75,7 @@ class InvertedIndex:
         Using save/load the whole index instead'''
         
         # Tokenize document, remove stop words, normalize, and stem
-        tokens = util.preprocess(doc)
+        tokens = util.preprocess(doc.body)
         
         # Add tokens to dictionary 
         token_counter = 0
@@ -110,7 +110,9 @@ class InvertedIndex:
             item.sort()
 
     def find(self, term):
-        return self.items[term]
+        for item in self.items:
+            if item.term == term:
+                return item
 
     def save(self, filename):
         ''' save to disk'''
@@ -222,5 +224,5 @@ def indexingCranfield():
     print('Done')
 
 if __name__ == '__main__':
-    unittest.main()
-#    indexingCranfield()
+#    unittest.main()
+    indexingCranfield()

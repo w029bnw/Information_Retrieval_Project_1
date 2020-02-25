@@ -7,9 +7,12 @@ import util
 import norvig_spell
 import cran
 import index as inverted_ind
+from index import IndexItem
+from index import Posting
 import pickle
 import unittest
 import cranqry
+import doc as d
 
 class QueryProcessor:
 
@@ -47,8 +50,9 @@ class QueryProcessor:
         ''' boolean query processing; note that a query like "A B C" is 
         transformed to "A AND B AND C" for retrieving posting lists and merge 
         them'''
-        query_terms = preprocessing()
+        query_terms = self.preprocessing()
         docs = []
+        docs_empty = True
         for word in query_terms:
             index_item = self.index.find(word)
             postings = index_item.sorted_postings
@@ -56,9 +60,10 @@ class QueryProcessor:
             if postings != []:
                 # If this is the first word being checked in the index we add
                 # all of the docIDs to our list of relevant documents
-                if docs == []:
-                    for doc in postings:
-                        docs.append(doc)
+                if docs_empty is True:
+                    docs = postings
+                    
+                    docs_empty = False
                  
                 # If this is not the first word being checked in the index,
                 # we need to compare lists and store a list of docIDs that 
@@ -66,15 +71,17 @@ class QueryProcessor:
                 # docIDs. This creates our intersection of relevant docIDs
                 # for the tokens from the query
                 else:
-                    temp = []
-                    for doc in postings:
-                        if doc in docs:
-                            temp.append(doc)
-                            
-                    # Set the list of doc IDs to the intersected list
-                    docs = temp
+                    if docs != []:
+                        docs = set(docs).intersection(set(postings))
+                        
+                    else:
+                        return []
                     
-                return docs.sort()                 
+        # Sort docs if they exist
+        if list(docs) != []:
+            docs.sort()
+                    
+        return list(docs)              
 
     def vectorQuery(self, k):
         ''' vector query processing, using the cosine similarity. '''
@@ -96,10 +103,42 @@ class test(unittest.TestCase):
         assert norvig_spell.correction(word) == 'magnetohydrodynamic'
         
 #    def test_boolean_query(self):
+    def test_boolean_query_with_results(self):
+        inverted_index = inverted_ind.InvertedIndex()
+        doc1 = d.Document('1','temp','me','Dogs are friendly.')
+        doc2 = d.Document('2','temp','me','Cats are friendly.')
+        doc_list = [doc1, doc2]
+        
+        for doc in doc_list:
+            inverted_index.indexDoc(doc)
+        
+        inverted_index.sort()
+        
+        query = "friendly"
+        query_processor = QueryProcessor(query, inverted_index, doc_list)
+        relevant_docs = query_processor.booleanQuery()
+        
+        assert relevant_docs == [1,2]
+        
+    def test_boolean_query_without_results(self):
+        inverted_index = inverted_ind.InvertedIndex()
+        doc1 = d.Document('1','temp','me','Dogs are friendly.')
+        doc2 = d.Document('2','temp','me','Cats are friendly.')
+        doc_list = [doc1, doc2]
+        
+        for doc in doc_list:
+            inverted_index.indexDoc(doc)
+        
+        inverted_index.sort()
+        
+        query = "dogs and cats"
+        query_processor = QueryProcessor(query, inverted_index, doc_list)
+        relevant_docs = query_processor.booleanQuery()
+        
+        assert relevant_docs == []
 #        
 #    def test_vector_query(self):
         
-    print('Pass')
 
 def query():
     ''' the main query processing program, using QueryProcessor'''
@@ -116,14 +155,15 @@ def query():
     collection = cran.CranFile(filename)
     
 # TODO: Load the saved inverted index object
-    filename = 'serialData'
+    filename = 'output.p'
     inverted_index = inverted_ind.InvertedIndex()
     inverted_index.load(filename)
     
 # TODO: Current code is for testing - be sure to replace this with code
 # that can accept input query strings as defined in the project document
-    for query in queries.docs:
-        query_processor = QueryProcessor(query, index, collection)
+    for query in queries:
+        query_processor = QueryProcessor(queries[query].text, inverted_index, collection)
+        temp = query_processor.booleanQuery()
         
     
 if __name__ == '__main__':

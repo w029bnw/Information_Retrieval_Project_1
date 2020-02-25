@@ -34,7 +34,7 @@ def stemming(word):
 
 def tokenize(doc):
     '''tokenizes the document'''
-    tokens = word_tokenize((doc.body).lower())
+    tokens = word_tokenize((doc).lower())
     
     return tokens
 

@@ -113,11 +113,15 @@ class InvertedIndex:
         for item in self.items:
             if item.term == term:
                 return item
+        
+        # If the term doesn't exist return an empty object
+        return None
+            
 
     def save(self, filename):
         ''' save to disk'''
         serial_data=open(filename, 'wb')
-        pickle.dump([self.items, self.nDocs], serial_data)
+        pickle.dump([self.items, self.nDocs, self.docLength], serial_data)
         serial_data.close()
 
     def load(self, filename):
@@ -128,11 +132,12 @@ class InvertedIndex:
         
         self.items = data[0]
         self.nDocs = data[1]
+        self.docLength = data[2]
 
     def idf(self, term):
         ''' compute the inverted document frequency for a given term'''
-        indexItem = self.find(term)
-        idf = math.log(self.nDocs/len(indexItem.sorted_postings))
+        index_item = self.find(term)
+        idf = math.log(self.nDocs/len(index_item.sorted_postings))
         return idf
 
 class test(unittest.TestCase):

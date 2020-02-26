@@ -13,6 +13,7 @@ import pickle
 import unittest
 import cranqry
 import doc as d
+import numpy as np
 
 class QueryProcessor:
 
@@ -55,36 +56,90 @@ class QueryProcessor:
         docs_empty = True
         for word in query_terms:
             index_item = self.index.find(word)
-            postings = index_item.sorted_postings
             
-            if postings != []:
-                # If this is the first word being checked in the index we add
-                # all of the docIDs to our list of relevant documents
-                if docs_empty is True:
-                    docs = postings
-                    
-                    docs_empty = False
-                 
-                # If this is not the first word being checked in the index,
-                # we need to compare lists and store a list of docIDs that 
-                # appear in both the current posting and the existing list of
-                # docIDs. This creates our intersection of relevant docIDs
-                # for the tokens from the query
-                else:
-                    if docs != []:
-                        docs = set(docs).intersection(set(postings))
+            if(index_item != None):
+                postings = index_item.sorted_postings
+                
+                if postings != []:
+                    # If this is the first word being checked in the index we add
+                    # all of the docIDs to our list of relevant documents
+                    if docs_empty is True:
+                        docs = postings
                         
+                        docs_empty = False
+                     
+                    # If this is not the first word being checked in the index,
+                    # we need to compare lists and store a list of docIDs that 
+                    # appear in both the current posting and the existing list of
+                    # docIDs. This creates our intersection of relevant docIDs
+                    # for the tokens from the query
                     else:
-                        return []
+                        if docs != []:
+                            docs = set(docs).intersection(set(postings))
+                         
+                        # No more shared documents exist, return
+                        else:
+                            return []
+                        
+            # If the term doesn't exist in the document collection, then
+            # there won't be a list of shared relevant documents.
+            else:
+                return []
                     
         # Sort docs if they exist
         if list(docs) != []:
-            docs.sort()
+            list(docs).sort()
                     
         return list(docs)              
 
     def vectorQuery(self, k):
         ''' vector query processing, using the cosine similarity. '''
+        query_terms = self.preprocessing()
+        relevant_docs = []
+        
+        # Start by creating a comprehensive list of all the possible relevant
+        # documents in the collection
+        for word in query_terms:
+            index_item = self.index.find(word)
+            
+            if index_item != None:
+                postings = index_item.posting
+                
+                for doc in postings:
+                    if doc not in relevant_docs:
+                        relevant_docs.append(doc)
+        
+        relevant_docs.sort()
+                        
+        # Calculate the weight of each term for each possible relevant document
+        tf_idf_matrix = {}
+        for word in query_terms:
+            tf_idf = []
+            index_item = self.index.find(word)
+            
+            if index_item != None:
+                postings = index_item.posting
+                for doc in relevant_docs:
+                    if doc in postings:
+                        score = postings[doc].term_freq(self.index.docLength[doc]) * self.index.idf(word)
+                    else:
+                        score = 0
+                        
+                    tf_idf.append(score)  
+                    
+            else:
+                for doc in relevant_docs:
+                    score = 0
+                    tf_idf.append(score)
+                    
+            tf_idf_matrix.update({word : tf_idf})
+                    
+         # Calculate the similarity between each document
+         for i in range(len(relevant_docs)):
+             for j in range(len(relevant_docs)):
+                 
+                 
+
         #ToDo: return top k pairs of (docID, similarity), ranked by their cosine similarity with the query in the descending order
         # You can use term frequency or TFIDF to construct the vectors
 
@@ -154,7 +209,6 @@ def query():
     filename = 'cran.all'
     collection = cran.CranFile(filename)
     
-# TODO: Load the saved inverted index object
     filename = 'output.p'
     inverted_index = inverted_ind.InvertedIndex()
     inverted_index.load(filename)
@@ -163,9 +217,10 @@ def query():
 # that can accept input query strings as defined in the project document
     for query in queries:
         query_processor = QueryProcessor(queries[query].text, inverted_index, collection)
-        temp = query_processor.booleanQuery()
+#        temp = query_processor.booleanQuery()
+        temp = query_processor.vectorQuery(3)
         
     
 if __name__ == '__main__':
-    unittest.main()
-    #query()
+    #unittest.main()
+    query()

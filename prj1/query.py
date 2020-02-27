@@ -14,6 +14,8 @@ import unittest
 import cranqry
 import doc as d
 import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import operator
 
 class QueryProcessor:
 
@@ -97,6 +99,12 @@ class QueryProcessor:
         query_terms = self.preprocessing()
         relevant_docs = []
         
+        # Add the query to the inverted_index as a document
+        n = self.index.nDocs + 1
+        query_doc = d.Document(str(n),'temp','me', self.raw_query)
+        self.index.indexDoc(query_doc)
+        self.index.sort()
+        
         # Start by creating a comprehensive list of all the possible relevant
         # documents in the collection
         for word in query_terms:
@@ -112,7 +120,8 @@ class QueryProcessor:
         relevant_docs.sort()
                         
         # Calculate the weight of each term for each possible relevant document
-        tf_idf_matrix = {}
+        tf_idf_matrix = np.empty((len(query_terms),len(relevant_docs)))
+        row = 0
         for word in query_terms:
             tf_idf = []
             index_item = self.index.find(word)
@@ -132,17 +141,24 @@ class QueryProcessor:
                     score = 0
                     tf_idf.append(score)
                     
-            tf_idf_matrix.update({word : tf_idf})
+            tf_idf_matrix[row] = tf_idf
+            row += 1
                     
-         # Calculate the similarity between each document
-         for i in range(len(relevant_docs)):
-             for j in range(len(relevant_docs)):
-                 
-                 
-
-        #ToDo: return top k pairs of (docID, similarity), ranked by their cosine similarity with the query in the descending order
-        # You can use term frequency or TFIDF to construct the vectors
-
+        # Calculate the similarity between each document and the query document
+        similarities = {}
+        for i in range(len(tf_idf_matrix[0])-1):         
+            similarity = cosine_similarity([tf_idf_matrix[:,-1]], [tf_idf_matrix[:,i]])
+            similarities.update({relevant_docs[i] : similarity[0][0]})
+            
+        # Sort the dictionary by values
+        sorted_similarities = sorted(similarities.items(), key=operator.itemgetter(1), reverse=True)
+        
+        # Retrieve k results and return
+        k_pairs = []
+        for x in range(k):
+            k_pairs.append(sorted_similarities[x])
+            
+        return k_pairs
 
 
 class test(unittest.TestCase):
@@ -191,8 +207,44 @@ class test(unittest.TestCase):
         relevant_docs = query_processor.booleanQuery()
         
         assert relevant_docs == []
-#        
-#    def test_vector_query(self):
+        
+    def test_vector_query_1(self):
+        inverted_index = inverted_ind.InvertedIndex()
+        doc1 = d.Document('1','temp','me','Dogs are friendly and social.')
+        doc2 = d.Document('2','temp','me','Cats can be friendly, but are often aloof.')
+        doc3 = d.Document('3','temp','me','Owners should consider which type of personality will fit their own personality the best.')
+        doc_list = [doc1, doc2, doc3]
+        
+        for doc in doc_list:
+            inverted_index.indexDoc(doc)
+            
+        inverted_index.sort()
+        
+        query = "Are dogs friendly?"
+        query_processor = QueryProcessor(query, inverted_index, doc_list)
+        relevant_docs = query_processor.vectorQuery(2)
+        
+        assert relevant_docs[0][0] == 1
+        assert relevant_docs[1][0] == 2
+        
+    def test_vector_query_2(self):
+        inverted_index = inverted_ind.InvertedIndex()
+        doc1 = d.Document('1','temp','me','Dogs are friendly and social.')
+        doc2 = d.Document('2','temp','me','Cats can be friendly, but are often aloof.')
+        doc3 = d.Document('3','temp','me','Owners should consider which type of personality will fit their own personality best when choosing whether to own a cat or dog.')
+        doc_list = [doc1, doc2, doc3]
+        
+        for doc in doc_list:
+            inverted_index.indexDoc(doc)
+            
+        inverted_index.sort()
+
+        query = "How do owners decide whether to own a cat or a dog?"   
+        query_processor = QueryProcessor(query, inverted_index, doc_list)
+        relevant_docs = query_processor.vectorQuery(3)
+        
+        assert relevant_docs[0][0] == 3
+        assert relevant_docs[1][1] == relevant_docs[2][1]
         
 
 def query():
@@ -222,5 +274,5 @@ def query():
         
     
 if __name__ == '__main__':
-    #unittest.main()
+#    unittest.main()
     query()

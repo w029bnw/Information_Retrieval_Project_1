@@ -16,6 +16,7 @@ import doc as d
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import operator
+import nltk
 
 class QueryProcessor:
 
@@ -147,7 +148,7 @@ class QueryProcessor:
         # Calculate the similarity between each document and the query document
         similarities = {}
         for i in range(len(tf_idf_matrix[0])-1):         
-            similarity = cosine_similarity([tf_idf_matrix[:,-1]], [tf_idf_matrix[:,i]])
+            similarity = cosine_similarity([tf_idf_matrix[:,i]], [tf_idf_matrix[:,-1]])
             similarities.update({relevant_docs[i] : similarity[0][0]})
             
         # Sort the dictionary by values
@@ -247,7 +248,7 @@ class test(unittest.TestCase):
         assert relevant_docs[1][1] == relevant_docs[2][1]
         
 
-def query():
+def query(index_filename, mode, query_filename, qid_or_n):
     ''' the main query processing program, using QueryProcessor'''
 
     # ToDo: the commandline usage: "echo query_string | python query.py index_file processing_algorithm"
@@ -255,24 +256,34 @@ def query():
     # for booleanQuery, the program will print the total number of documents and the list of docuement IDs
     # for vectorQuery, the program will output the top 3 most similar documents
     
-    filename = 'query.text'
-    queries = cranqry.loadCranQry(filename)
-    
+    # Load document collection, inverted_index file, and the query file
     filename = 'cran.all'
     collection = cran.CranFile(filename)
     
-    filename = 'output.p'
     inverted_index = inverted_ind.InvertedIndex()
-    inverted_index.load(filename)
+    inverted_index.load(index_filename)
     
-# TODO: Current code is for testing - be sure to replace this with code
-# that can accept input query strings as defined in the project document
-    for query in queries:
-        query_processor = QueryProcessor(queries[query].text, inverted_index, collection)
-#        temp = query_processor.booleanQuery()
-        temp = query_processor.vectorQuery(3)
+    queries = cranqry.loadCranQry(query_filename)
+    
+    # Boolean query
+    if mode == 0:
+        query = queries[qid_or_n]
+        query_processor = QueryProcessor(query.text, inverted_index, collection)
+        print(query_processor.booleanQuery())
+       
+    # Vector Query
+    elif mode == 1:
+        query = queries[qid_or_n]
+        query_processor = QueryProcessor(query.text, inverted_index, collection)
+        print(query_processor.vectorQuery(3))
+      
+    # Batch Evaluation
+    elif mode == 2:
+        #TODO
+        print()
         
-    
 if __name__ == '__main__':
 #    unittest.main()
-    query()
+    query('output.p', 0, 'query.text', '201') # Boolean
+    query('output.p', 1, 'query.text', '201') # Vector
+#    query('output.p', 2, 'query.text', ) # Batch Eval

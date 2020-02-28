@@ -23,6 +23,8 @@ import cran
 import unittest
 import math
 import pickle
+import sys
+import nltk
 
 class Posting:
     def __init__(self, docID):
@@ -41,7 +43,8 @@ class Posting:
 
     def term_freq(self, doc_length):
         ''' return the term frequency in the document'''
-        return (len(self.positions)/doc_length)
+#        return (len(self.positions)/doc_length)
+        return len(self.positions)
 
 
 class IndexItem:
@@ -207,14 +210,14 @@ class test(unittest.TestCase):
         inverted_index_new.load('output.p')
         assert inverted_index.items[0].term == inverted_index_new.items[0].term
 
-def indexingCranfield():
+def indexingCranfield(doc_filename, index_filename):
     #ToDo: indexing the Cranfield dataset and save the index to a file
     # command line usage: "python index.py cran.all index_file"
     # the index is saved to index_file
     
     # Load cran.all and create a cran_file object to store the document info
-    filename = 'cran.all'
-    cran_file = cran.CranFile(filename)
+#    filename = 'cran.all'
+    cran_file = cran.CranFile(doc_filename)
         
     inverted_index = InvertedIndex()
     for doc in cran_file.docs:
@@ -224,10 +227,11 @@ def indexingCranfield():
     inverted_index.sort()
     
     # Save the index
-    inverted_index.save('output.p')
+    inverted_index.save(index_filename)
 
     print('Done')
 
 if __name__ == '__main__':
 #    unittest.main()
-    indexingCranfield()
+    indexingCranfield('cran.all', 'output.p')
+#    indexingCranfield(sys.argv[1], sys.argv[2])

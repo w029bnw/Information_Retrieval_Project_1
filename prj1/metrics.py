@@ -68,7 +68,7 @@ def ndcg_score(y_true, y_score, k=10, gains="exponential"):
     actual = dcg_score(y_true, y_score, k, gains)
     return actual / best
 
-class testMetric(unittest.TestCase):
+class test(unittest.TestCase):
 
 # Testing 
 # Check that some rankings are better than others
@@ -90,3 +90,6 @@ class testMetric(unittest.TestCase):
   def dcg_score_order(self):
     assert dcg_score([5, 3, 2], [2, 1, 0]) == dcg_score([2, 3, 5], [0, 1, 2])
     assert dcg_score([5, 3, 2], [2, 1, 0], k=2) == dcg_score([2, 3, 5], [0, 1, 2], k=2)
+    
+#if __name__ == '__main__':
+#    unittest.main()

@@ -5,20 +5,18 @@
     shared by both indexing and query processing
 '''
 import string
-
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 from nltk.tokenize import word_tokenize
     
 def isStopWord(word):
     ''' using the NLTK functions, return true/false'''    
-    stop_words = set(stopwords.words('english'))
     
-    # Keke provided a list of stop words but also requests we use the NLTK 
-    # functions. Need to clarify what he would prefer us to use.
-#    f = open('stopwords', 'r')
-#    stop_words = f.read()
-#    f.close()
+    f = open('stopwords', 'r')
+    stop_words = f.read()
+    f.close()
+    
     translation = word.maketrans('','',string.punctuation) # For edge cases where whole word is punctuation
     if word not in stop_words and word not in string.punctuation and word.translate(translation) != '':
         return False

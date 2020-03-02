@@ -1,9 +1,8 @@
 '''
+
 Peter Norvig's python implementation of Spelling Corrector
 
 '''
-
-
 
 import re
 from collections import Counter

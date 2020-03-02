@@ -1,4 +1,3 @@
-
 '''
 query processing
 
@@ -9,14 +8,15 @@ import cran
 import index as inverted_ind
 from index import IndexItem
 from index import Posting
-import pickle
 import unittest
 import cranqry
 import doc as d
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import operator
-import nltk
+import sys
+import random
+import batch_eval
 
 class QueryProcessor:
 
@@ -165,7 +165,7 @@ class QueryProcessor:
 class test(unittest.TestCase):
     ''' test your code thoroughly. put the testing cases here'''
     
-# Test that the spell check works for both technical and non technical words
+    # Test that the spell check works for both technical and non technical words
     def test_spellcheck(self):
         word = 'retangulor'
         assert norvig_spell.correction(word) == 'rectangular'
@@ -174,7 +174,7 @@ class test(unittest.TestCase):
         word = 'magntohydodynamic'
         assert norvig_spell.correction(word) == 'magnetohydrodynamic'
         
-#    def test_boolean_query(self):
+    # Test boolean query model
     def test_boolean_query_with_results(self):
         inverted_index = inverted_ind.InvertedIndex()
         doc1 = d.Document('1','temp','me','Dogs are friendly.')
@@ -209,6 +209,7 @@ class test(unittest.TestCase):
         
         assert relevant_docs == []
         
+    # Test vector query model
     def test_vector_query_1(self):
         inverted_index = inverted_ind.InvertedIndex()
         doc1 = d.Document('1','temp','me','Dogs are friendly and social.')
@@ -247,14 +248,33 @@ class test(unittest.TestCase):
         assert relevant_docs[0][0] == 3
         assert relevant_docs[1][1] == relevant_docs[2][1]
         
+    # Test the accuracy of the cosine similarity calculations
+    def test_cosine_similarity_same_vectors(self):
+        # Using only a single word across 2 strings
+        a = np.matrix([1])
+        b = np.matrix([1])
+        
+        np.transpose(a)
+        np.transpose(b)
+        
+        similarity = cosine_similarity(a,b)
+        
+        assert similarity[0][0] == 1
+        
+    def test_cosine_similarity_different_vectors(self):
+        # Using only a single word across 2 strings
+        a = np.matrix([0])
+        b = np.matrix([1])
+        
+        np.transpose(a)
+        np.transpose(b)
 
+        similarity = cosine_similarity(a,b)
+        
+        assert similarity[0][0] == 0
+        
 def query(index_filename, mode, query_filename, qid_or_n):
     ''' the main query processing program, using QueryProcessor'''
-
-    # ToDo: the commandline usage: "echo query_string | python query.py index_file processing_algorithm"
-    # processing_algorithm: 0 for booleanQuery and 1 for vectorQuery
-    # for booleanQuery, the program will print the total number of documents and the list of docuement IDs
-    # for vectorQuery, the program will output the top 3 most similar documents
     
     # Load document collection, inverted_index file, and the query file
     filename = 'cran.all'
@@ -279,11 +299,16 @@ def query(index_filename, mode, query_filename, qid_or_n):
       
     # Batch Evaluation
     elif mode == 2:
-        #TODO
-        print()
+        n_queries = random.sample(list(queries.values()), int(qid_or_n))
+        query_processor = QueryProcessor('', inverted_index, collection)
+        b_time, v_time = batch_eval.time_evaluation(n_queries, query_processor)
+        
+        print('Avg Boolean Query Processing Time: %4.4f Avg Vector Query Processing Time: %4.4f' % (b_time, v_time))
         
 if __name__ == '__main__':
 #    unittest.main()
-    query('output.p', 0, 'query.text', '201') # Boolean
-    query('output.p', 1, 'query.text', '201') # Vector
-#    query('output.p', 2, 'query.text', ) # Batch Eval
+#    query('output.p', 0, 'query.text', '201') # Boolean
+#    query('output.p', 1, 'query.text', '201') # Vector
+#    query('output.p', 2, 'query.text', 20) # Batch Eval
+    
+    query(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])

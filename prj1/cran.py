@@ -3,8 +3,8 @@
 processing the special format used by the Cranfield Dataset
 
 
-
 '''
+
 from doc import Document
 
 

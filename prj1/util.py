@@ -1,8 +1,8 @@
-
 '''
    utility functions for processing terms
 
-    shared by both indexing and query processing
+   shared by both indexing and query processing
+    
 '''
 import string
 import nltk
@@ -17,8 +17,10 @@ def isStopWord(word):
     stop_words = f.read()
     f.close()
     
-    translation = word.maketrans('','',string.punctuation) # For edge cases where whole word is punctuation
-    if word not in stop_words and word not in string.punctuation and word.translate(translation) != '':
+#    translation = word.maketrans('','',string.punctuation) # For edge cases where whole word is punctuation
+#    if word not in stop_words and word not in string.punctuation and word.translate(translation) != '':
+	
+    if word not in stop_words and word not in string.punctuation:
         return False
     else:
         return True
@@ -38,7 +40,8 @@ def tokenize(doc):
 
 def preprocess(doc):
     '''returns list of tokens that has been stemmed and stopwords have been 
-    removed'''        
+    removed'''       
+    
     # Tokenize the documents, then filter stop-words and stem tokens
     tokens = tokenize(doc)
     processed_tokens = []

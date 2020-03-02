@@ -1,6 +1,7 @@
-
 '''
+
   handling the specific input format of the query.text for the Cranfield data
+  
 '''
 
 

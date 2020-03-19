@@ -3,8 +3,8 @@
 processing the special format used by the Cranfield Dataset
 
 
-
 '''
+
 from doc import Document
 
 
@@ -45,5 +45,5 @@ if __name__ == '__main__':
 
     cf = CranFile ('cran.all')
     for doc in cf.docs:
-        print doc.docID, doc.title, doc.body
-    print len(cf.docs)
+        print(doc.docID, doc.title, doc.body)
+    print(len(cf.docs))
